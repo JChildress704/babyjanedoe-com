@@ -6,7 +6,7 @@ Wedding website for Justin & Mikaela — April 24, 2027, Knoxville, TN.
 
 - `index.html` — the save-the-date landing page (static HTML/CSS, no build step)
 - `images/` — photos used on the site
-- `reference/` — design references, not served on the live site
+- `reference/` — design references and source assets, not served on the live site (see `reference/README.md`)
 - `.github/workflows/deploy.yml` — deploys `main` to Hostinger over FTP on every push
 
 ## Deployment
