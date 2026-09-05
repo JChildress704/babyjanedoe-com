@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Justin &amp; Mikaela</title>
+<meta name="description" content="Save the date — Justin Childress &amp; Mikaela Wilson are getting married April 24, 2027 in Knoxville, Tennessee.">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,500&display=swap">
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: 'Cormorant Garamond', 'Times New Roman', serif;
+    background: #90CDD1;
+    position: relative;
+    --rail: 0px;
+  }
+  a { color: #F46F30; text-decoration: underline; }
+  a:hover { color: #CD4D1A; }
+  .std-divider { display:flex; align-items:center; gap:10px; width:58%; max-width:280px; }
+  .std-divider .line { flex:1; height:1px; background:rgba(59,46,74,0.32); }
+  .std-divider .diamond { width:7px; height:7px; background:#F46F30; transform:rotate(45deg); flex-shrink:0; }
+  .std-label { font-size:clamp(0.68rem,1.7vw,0.92rem); letter-spacing:0.32em; text-transform:uppercase; color:#3B2E4A; font-weight:600; }
+  .side-image { position:fixed; top:0; height:100vh; width:var(--rail); object-fit:cover; display:none; z-index:0; }
+  .side-image.left { left:0; }
+  .side-image.right { right:0; }
+  .content-wrap { position:relative; z-index:1; margin-left:var(--rail); margin-right:var(--rail); }
+  /* rail images are desktop-only: excluded entirely below this width */
+  @media (min-width:701px) {
+    body { --rail: min(33.333vw, 560px); }
+    .side-image { display:block; }
+  }
+</style>
+</head>
+<body>
+
+<img class="side-image left" src="images/image_left.jpg" alt="">
+<img class="side-image right" src="images/image_right.jpg" alt="">
+
+<div class="content-wrap">
+
+  <!-- ================= HERO ================= -->
+  <section style="min-height:100vh; width:100%; position:relative; display:flex; flex-direction:column; align-items:center; justify-content:center; overflow:hidden; padding:64px 16px;">
+
+    <div style="position:relative; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:22px; text-align:center; max-width:560px;">
+
+      <div class="std-label">Save the Date</div>
+
+      <div class="std-divider"><div class="line"></div><div class="diamond"></div><div class="line"></div></div>
+
+      <div style="display:flex; flex-direction:column; align-items:center;">
+        <div style="font-size:clamp(2rem,9vw,4.2rem); line-height:1.05; color:#3B2E4A; font-weight:500;">Justin</div>
+        <div style="font-size:clamp(1rem,2.6vw,1.3rem); font-style:italic; color:#F46F30; margin:4px 0;">&amp;</div>
+        <div style="font-size:clamp(2rem,9vw,4.2rem); line-height:1.05; color:#3B2E4A; font-weight:500;">Mikaela</div>
+      </div>
+
+      <div class="std-divider"><div class="line"></div><div class="diamond"></div><div class="line"></div></div>
+
+      <div style="display:flex; flex-direction:column; align-items:center; gap:6px;">
+        <div class="std-label" style="font-size:clamp(0.66rem,1.5vw,0.85rem);">Saturday</div>
+        <div style="font-size:clamp(1.1rem,3vw,1.5rem); letter-spacing:0.05em; color:#3B2E4A; font-weight:500;">April 24, 2027</div>
+        <div class="std-label" style="font-size:clamp(0.66rem,1.5vw,0.85rem); margin-top:2px;">Knoxville, Tennessee</div>
+      </div>
+
+      <div style="width:46px; height:46px; border-radius:50%; border:1px solid rgba(59,46,74,0.4); display:flex; align-items:center; justify-content:center; font-size:0.8rem; letter-spacing:0.12em; color:#3B2E4A; margin-top:8px;">J &middot; M</div>
+
+    </div>
+  </section>
+
+  <!-- ================= DETAILS ================= -->
+  <section style="width:100%; display:flex; justify-content:center; padding:0 24px 110px;">
+    <div style="max-width:480px; width:100%; display:flex; flex-direction:column; align-items:center; gap:28px; text-align:center;">
+
+      <div class="std-divider"><div class="line"></div><div class="diamond"></div><div class="line"></div></div>
+
+      <div style="display:flex; flex-direction:column; align-items:center; gap:6px;">
+        <div class="std-label" style="font-size:0.78rem;">Ceremony</div>
+        <div style="font-size:1.3rem; color:#3B2E4A; font-weight:500;">Old North Abbey</div>
+        <div style="font-size:0.98rem; color:#4A3D5C; line-height:1.5;">2537 Fairmont Blvd<br>Knoxville, TN 37917</div>
+      </div>
+
+      <div class="std-divider"><div class="line"></div><div class="diamond"></div><div class="line"></div></div>
+
+      <div style="display:flex; flex-direction:column; align-items:center; gap:6px;">
+        <div class="std-label" style="font-size:0.78rem;">Reception to Follow</div>
+        <div style="font-size:1.3rem; color:#3B2E4A; font-weight:500;">Knoxville Museum of Art</div>
+        <div style="font-size:0.98rem; color:#4A3D5C; line-height:1.5;">1050 Worlds Fair Park Dr<br>Knoxville, TN 37916</div>
+      </div>
+
+      <div class="std-divider"><div class="line"></div><div class="diamond"></div><div class="line"></div></div>
+
+      <div style="font-size:1rem; font-style:italic; color:#3B2E4A; letter-spacing:0.02em;">Formal invitation with RSVP details to follow</div>
+
+    </div>
+  </section>
+
+</div>
+</body>
+</html>
