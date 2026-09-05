@@ -6,15 +6,34 @@ Usage:
 
 Swap reference/image_preview.jpg for a different photo and re-run this to
 update the card shown when the site link is shared (iMessage, WhatsApp,
-Slack, etc.) — no other changes needed since index.html always points at
-images/og-image.jpg.
+Slack, etc.).
+
+IMPORTANT — cache busting: Hostinger's CDN (and iMessage/WhatsApp/etc.)
+cache the image by URL, and in testing the CDN ignores query-string cache
+busters and can keep serving an old copy for a long time. So this script
+writes a NEW versioned filename (og-image-v3.jpg, v4.jpg, ...) each run
+instead of overwriting og-image.jpg. After running it, update the two
+`https://babyjanedoe.com/images/og-image-vN.jpg` URLs in index.html
+(og:image and twitter:image) to match the printed filename, then delete
+the previous version's file so old copies don't pile up.
 """
+import re
 from pathlib import Path
 from PIL import Image, ImageDraw, ImageFont, ImageOps
 
 REPO = Path(__file__).resolve().parent.parent
 SOURCE_PHOTO = REPO / "reference" / "image_preview.jpg"
-OUTPUT = REPO / "images" / "og-image.jpg"
+IMAGES_DIR = REPO / "images"
+
+
+def next_output_path():
+    existing = [p.name for p in IMAGES_DIR.glob("og-image-v*.jpg")]
+    versions = [int(m.group(1)) for n in existing if (m := re.match(r"og-image-v(\d+)\.jpg", n))]
+    next_version = max(versions, default=1) + 1
+    return IMAGES_DIR / f"og-image-v{next_version}.jpg"
+
+
+OUTPUT = next_output_path()
 
 W, H = 1200, 630
 LEFT_W = 600
