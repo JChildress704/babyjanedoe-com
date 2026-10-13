@@ -131,7 +131,7 @@
             <label class="field-label" for="notes">Anything we should know?</label>
             <textarea id="notes" maxlength="1000" placeholder="Dietary needs, a note for the couple… (optional)"></textarea>
           </div>
-          <button type="submit">Send RSVP</button>
+          <button type="submit" id="send">Send RSVP</button>
         </form>
         <button type="button" class="link" id="not-me">Not your invitation? Search again</button>
       </section>
@@ -265,6 +265,7 @@
     }
     select.value = h.children_attending;
     $('notes').value = h.notes || '';
+    $('send').textContent = h.responded ? 'Change RSVP' : 'Send RSVP';
     updateChildrenField();
     show('step-respond');
   }
