@@ -1,2 +1,6 @@
 .DS_Store
 Thumbs.db
+
+# Real guest list and RSVP password — live only on the server, never in git
+rsvp-data/
+rsvp-data-example/rsvps.json

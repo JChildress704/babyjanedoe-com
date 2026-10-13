@@ -1,0 +1,299 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RSVP · Justin &amp; Mikaela</title>
+<meta name="robots" content="noindex">
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,500&display=swap">
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: 'Cormorant Garamond', 'Times New Roman', serif;
+    background: #90CDD1;
+    color: #3B2E4A;
+    position: relative;
+    --rail: 0px;
+  }
+  a { color: #F46F30; text-decoration: underline; }
+  a:hover { color: #CD4D1A; }
+  .std-divider { display:flex; align-items:center; gap:10px; width:58%; max-width:280px; }
+  .std-divider .line { flex:1; height:1px; background:rgba(59,46,74,0.32); }
+  .std-divider .diamond { width:7px; height:7px; background:#F46F30; transform:rotate(45deg); flex-shrink:0; }
+  .std-label { font-size:clamp(0.68rem,1.7vw,0.92rem); letter-spacing:0.32em; text-transform:uppercase; color:#3B2E4A; font-weight:600; }
+  .side-image { position:fixed; top:0; height:100vh; width:var(--rail); object-fit:cover; display:none; z-index:0; }
+  .side-image.left { left:0; object-position:90% center; }
+  .side-image.right { right:0; }
+  .content-wrap { position:relative; z-index:1; margin-left:var(--rail); margin-right:var(--rail); }
+  @media (min-width:701px) {
+    body { --rail: min(33.333vw, 560px); }
+    .side-image { display:block; }
+  }
+
+  /* ---- RSVP ---- */
+  .page { min-height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:64px 16px; }
+  .stack { width:100%; max-width:420px; display:flex; flex-direction:column; align-items:center; gap:22px; text-align:center; }
+  .title { font-size:clamp(2rem,7vw,3rem); line-height:1.05; font-weight:500; }
+  .hint { font-size:1.05rem; font-style:italic; line-height:1.4; }
+  .step { width:100%; display:flex; flex-direction:column; align-items:center; gap:16px; }
+  .step[hidden] { display:none; }
+  form { width:100%; display:flex; flex-direction:column; gap:14px; }
+  input[type=text], input[type=password], input[type=search], textarea {
+    width:100%; font:inherit; font-size:1.15rem; color:#3B2E4A;
+    background:rgba(255,255,255,0.55); border:1px solid rgba(59,46,74,0.35); border-radius:4px;
+    padding:12px 14px; text-align:center;
+  }
+  textarea { text-align:left; font-size:1.05rem; min-height:80px; resize:vertical; }
+  input:focus, textarea:focus, button:focus-visible { outline:2px solid #F46F30; outline-offset:2px; }
+  button {
+    font:inherit; font-size:0.85rem; font-weight:600; letter-spacing:0.28em; text-transform:uppercase;
+    color:#fff; background:#3B2E4A; border:none; border-radius:4px; padding:14px 18px; cursor:pointer;
+  }
+  button:hover { background:#2A2036; }
+  button:disabled { opacity:0.6; cursor:default; }
+  button.link { background:none; color:#3B2E4A; text-decoration:underline; letter-spacing:0.08em; text-transform:none; font-size:1rem; font-weight:500; padding:4px; }
+  .error { color:#A3361A; font-size:1.05rem; font-weight:500; min-height:1.3em; }
+  .matches { width:100%; display:flex; flex-direction:column; gap:10px; }
+  .match {
+    width:100%; text-align:center; font-size:1.25rem; letter-spacing:0.02em; text-transform:none; font-weight:500;
+    color:#3B2E4A; background:rgba(255,255,255,0.55); border:1px solid rgba(59,46,74,0.35);
+  }
+  .match:hover { background:rgba(255,255,255,0.8); }
+  .guest { width:100%; display:flex; flex-direction:column; align-items:center; gap:8px; padding:4px 0; }
+  .guest-name { font-size:1.35rem; font-weight:500; }
+  .choice { display:flex; gap:10px; width:100%; }
+  .choice label { flex:1; cursor:pointer; }
+  .choice input { position:absolute; opacity:0; pointer-events:none; }
+  .choice span {
+    display:block; padding:10px 8px; border:1px solid rgba(59,46,74,0.35); border-radius:4px;
+    background:rgba(255,255,255,0.4); font-size:1.05rem;
+  }
+  .choice input:checked + span { background:#3B2E4A; color:#fff; border-color:#3B2E4A; }
+  .choice input:focus-visible + span { outline:2px solid #F46F30; outline-offset:2px; }
+  .field-label { font-size:0.78rem; letter-spacing:0.28em; text-transform:uppercase; font-weight:600; }
+  select { font:inherit; font-size:1.15rem; color:#3B2E4A; padding:8px 12px; border-radius:4px; border:1px solid rgba(59,46,74,0.35); background:rgba(255,255,255,0.55); }
+</style>
+</head>
+<body>
+
+<img class="side-image left" src="../images/image_left.jpg" alt="">
+<img class="side-image right" src="../images/image_right.jpg" alt="">
+
+<div class="content-wrap">
+  <main class="page">
+    <div class="stack">
+
+      <div class="std-label">Justin &amp; Mikaela</div>
+      <div class="title">RSVP</div>
+      <div class="std-divider"><div class="line"></div><div class="diamond"></div><div class="line"></div></div>
+
+      <!-- Step 1: password -->
+      <section class="step" id="step-login" hidden>
+        <div class="hint">Please enter the password from your invitation.</div>
+        <form id="login-form">
+          <input type="password" id="password" autocomplete="current-password" aria-label="Password" required>
+          <button type="submit">Continue</button>
+        </form>
+      </section>
+
+      <!-- Step 2: last-name search -->
+      <section class="step" id="step-search" hidden>
+        <div class="hint">Enter your last name to find your invitation.</div>
+        <form id="search-form">
+          <input type="search" id="query" autocomplete="family-name" aria-label="Last name" placeholder="Last name" required minlength="2">
+          <button type="submit">Find my invitation</button>
+        </form>
+        <div class="matches" id="matches"></div>
+      </section>
+
+      <!-- Step 3: response -->
+      <section class="step" id="step-respond" hidden>
+        <form id="respond-form">
+          <div id="guests"></div>
+          <div id="children-field" class="guest" hidden>
+            <label class="field-label" for="children">Children attending</label>
+            <select id="children"></select>
+          </div>
+          <div class="guest">
+            <label class="field-label" for="notes">Anything we should know?</label>
+            <textarea id="notes" maxlength="1000" placeholder="Dietary needs, a note for the couple… (optional)"></textarea>
+          </div>
+          <button type="submit">Send RSVP</button>
+        </form>
+        <button type="button" class="link" id="not-me">Not your invitation? Search again</button>
+      </section>
+
+      <!-- Step 4: confirmation -->
+      <section class="step" id="step-done" hidden>
+        <div class="title" style="font-size:1.8rem;">Thank you!</div>
+        <div class="hint" id="done-message"></div>
+        <button type="button" class="link" id="edit-again">Change your response</button>
+        <a href="../">Back to the main page</a>
+      </section>
+
+      <div class="error" id="error" role="alert"></div>
+
+    </div>
+  </main>
+</div>
+
+<script>
+  const $ = (id) => document.getElementById(id);
+  const steps = ['step-login', 'step-search', 'step-respond', 'step-done'];
+  let current = null; // household currently being answered
+
+  function show(step) {
+    steps.forEach((s) => { $(s).hidden = s !== step; });
+    $('error').textContent = '';
+    const focusable = $(step).querySelector('input:not([type=radio]), button');
+    if (focusable) focusable.focus();
+  }
+
+  async function api(action, body = {}) {
+    const res = await fetch('api.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'same-origin',
+      body: JSON.stringify({ action, ...body }),
+    });
+    const data = await res.json().catch(() => ({ error: 'Something went wrong. Please try again.' }));
+    if (data.needs_login) { show('step-login'); }
+    if (!res.ok) throw new Error(data.error || 'Something went wrong. Please try again.');
+    return data;
+  }
+
+  function busy(form, isBusy) {
+    form.querySelectorAll('button, input, select, textarea').forEach((el) => { el.disabled = isBusy; });
+  }
+
+  async function submitWith(form, work) {
+    $('error').textContent = '';
+    busy(form, true);
+    try { await work(); }
+    catch (err) { $('error').textContent = err.message; }
+    finally { busy(form, false); }
+  }
+
+  // ---- Step 1 ----
+  $('login-form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    submitWith(e.target, async () => {
+      await api('login', { password: $('password').value });
+      show('step-search');
+    });
+  });
+
+  // ---- Step 2 ----
+  $('search-form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    submitWith(e.target, async () => {
+      const { households } = await api('search', { query: $('query').value });
+      const list = $('matches');
+      list.replaceChildren();
+      if (households.length === 0) {
+        $('error').textContent = "We couldn't find that name. Try another spelling, or the last name of anyone else on your invitation.";
+        return;
+      }
+      const prompt = document.createElement('div');
+      prompt.className = 'hint';
+      prompt.textContent = households.length === 1 ? 'Is this you?' : 'Please choose your invitation:';
+      list.append(prompt);
+      households.forEach((h) => {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'match';
+        b.textContent = h.label;
+        b.addEventListener('click', () => openHousehold(h));
+        list.append(b);
+      });
+    });
+  });
+
+  // ---- Step 3 ----
+  function openHousehold(h) {
+    current = h;
+    const container = $('guests');
+    container.replaceChildren();
+    h.guests.forEach((g, i) => {
+      const wrap = document.createElement('div');
+      wrap.className = 'guest';
+      const name = document.createElement('div');
+      name.className = 'guest-name';
+      name.textContent = g.name;
+      const choice = document.createElement('div');
+      choice.className = 'choice';
+      choice.setAttribute('role', 'radiogroup');
+      choice.setAttribute('aria-label', g.name);
+      [['yes', 'Joyfully accepts', true], ['no', 'Regretfully declines', false]].forEach(([val, text, bool]) => {
+        const label = document.createElement('label');
+        const input = document.createElement('input');
+        input.type = 'radio';
+        input.name = `guest-${i}`;
+        input.value = val;
+        input.required = true;
+        input.checked = g.attending === bool;
+        input.addEventListener('change', updateChildrenField);
+        const span = document.createElement('span');
+        span.textContent = text;
+        label.append(input, span);
+        choice.append(label);
+      });
+      wrap.append(name, choice);
+      container.append(wrap);
+    });
+
+    const select = $('children');
+    select.replaceChildren();
+    for (let n = 0; n <= h.max_children; n++) {
+      const opt = document.createElement('option');
+      opt.value = n;
+      opt.textContent = n;
+      select.append(opt);
+    }
+    select.value = h.children_attending;
+    $('notes').value = h.notes || '';
+    updateChildrenField();
+    show('step-respond');
+  }
+
+  function answers() {
+    return current.guests.map((_, i) => {
+      const checked = document.querySelector(`input[name="guest-${i}"]:checked`);
+      return checked ? checked.value === 'yes' : null;
+    });
+  }
+
+  // Children are only asked about when the household has some and at least one adult is coming.
+  function updateChildrenField() {
+    $('children-field').hidden = !(current.max_children > 0 && answers().includes(true));
+  }
+
+  $('respond-form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    submitWith(e.target, async () => {
+      const guests = answers();
+      if (guests.includes(null)) throw new Error('Please let us know whether each guest is attending.');
+      const children = guests.includes(true) ? Number($('children').value) : 0;
+      const { household } = await api('submit', {
+        id: current.id, guests, children, notes: $('notes').value,
+      });
+      current = household;
+      $('done-message').textContent = household.guests.some((g) => g.attending)
+        ? "We can't wait to celebrate with you on April 24, 2027."
+        : "We'll miss you, and we're grateful you let us know.";
+      show('step-done');
+    });
+  });
+
+  $('not-me').addEventListener('click', () => { $('matches').replaceChildren(); show('step-search'); });
+  $('edit-again').addEventListener('click', () => openHousehold(current));
+
+  // Skip the password screen if this browser already entered it.
+  api('status')
+    .then(({ authenticated }) => show(authenticated ? 'step-search' : 'step-login'))
+    .catch((err) => { show('step-login'); $('error').textContent = err.message; });
+</script>
+</body>
+</html>

@@ -24,3 +24,5 @@ jobs:
             **/.git*/**
             **/.github/**
             **/reference/**
+            **/rsvp-data-example/**
+            **/rsvp-data/**
