@@ -308,9 +308,9 @@
 
   // ---- Editor ----
   function guestRow(g = { first: '', last: '', attending: null }) {
-    const first = el('input', { type: 'text', placeholder: 'First name', value: g.first, required: true, ariaLabel: 'First name' });
-    const last = el('input', { type: 'text', placeholder: 'Last name', value: g.last, required: true, ariaLabel: 'Last name' });
-    const attending = el('select', { ariaLabel: 'Attending' }, [
+    const first = el('input', { type: 'text', className: 'g-first', placeholder: 'First name', value: g.first, required: true, ariaLabel: 'First name' });
+    const last = el('input', { type: 'text', className: 'g-last', placeholder: 'Last name', value: g.last, required: true, ariaLabel: 'Last name' });
+    const attending = el('select', { className: 'g-attending', ariaLabel: 'Attending' }, [
       el('option', { value: '', textContent: 'No answer' }),
       el('option', { value: 'yes', textContent: 'Attending' }),
       el('option', { value: 'no', textContent: 'Declined' }),
@@ -319,7 +319,7 @@
     const remove = el('button', { type: 'button', className: 'secondary small', textContent: 'Remove' });
     const row = el('div', { className: 'guest-row' }, [first, last, attending, remove]);
     remove.addEventListener('click', () => {
-      if ($('guest-rows').children.length > 1) row.remove();
+      if ($('guest-rows').querySelectorAll('.guest-row').length > 1) row.remove();
     });
     return row;
   }
@@ -336,13 +336,15 @@
     $('editor').showModal();
   }
 
+  // Rows and fields are found by class, not position: browser extensions (password managers,
+  // autofill, Grammarly) can inject their own elements into the page.
   function readEditor() {
-    const guests = [...$('guest-rows').children].map((row) => {
-      const [first, last, attending] = row.querySelectorAll('input, select');
+    const guests = [...$('guest-rows').querySelectorAll('.guest-row')].map((row) => {
+      const attending = row.querySelector('.g-attending').value;
       return {
-        first: first.value.trim(),
-        last: last.value.trim(),
-        attending: attending.value === 'yes' ? true : attending.value === 'no' ? false : null,
+        first: row.querySelector('.g-first').value.trim(),
+        last: row.querySelector('.g-last').value.trim(),
+        attending: attending === 'yes' ? true : attending === 'no' ? false : null,
       };
     });
     return {
