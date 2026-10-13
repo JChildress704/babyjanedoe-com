@@ -1,0 +1,419 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RSVP Admin · Justin &amp; Mikaela</title>
+<meta name="robots" content="noindex">
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,500&display=swap">
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: 'Cormorant Garamond', 'Times New Roman', serif;
+    background: #90CDD1;
+    color: #3B2E4A;
+    font-size: 1.05rem;
+  }
+  a { color: #F46F30; }
+  [hidden] { display: none !important; }
+  .std-divider { display:flex; align-items:center; gap:10px; width:58%; max-width:280px; margin:0 auto; }
+  .std-divider .line { flex:1; height:1px; background:rgba(59,46,74,0.32); }
+  .std-divider .diamond { width:7px; height:7px; background:#F46F30; transform:rotate(45deg); flex-shrink:0; }
+  .std-label { font-size:0.78rem; letter-spacing:0.28em; text-transform:uppercase; font-weight:600; }
+
+  .wrap { max-width:1100px; margin:0 auto; padding:32px 16px 80px; }
+  h1 { font-size:2.2rem; font-weight:500; margin:6px 0 14px; text-align:center; }
+  .center { text-align:center; }
+
+  input, select, textarea {
+    font:inherit; color:#3B2E4A; background:rgba(255,255,255,0.7);
+    border:1px solid rgba(59,46,74,0.35); border-radius:4px; padding:7px 10px;
+  }
+  input:focus, select:focus, textarea:focus, button:focus-visible { outline:2px solid #F46F30; outline-offset:1px; }
+  button {
+    font:inherit; font-size:0.78rem; font-weight:600; letter-spacing:0.18em; text-transform:uppercase;
+    color:#fff; background:#3B2E4A; border:1px solid #3B2E4A; border-radius:4px; padding:9px 14px; cursor:pointer;
+  }
+  button:hover { background:#2A2036; }
+  button:disabled { opacity:0.6; cursor:default; }
+  button.secondary { background:rgba(255,255,255,0.6); color:#3B2E4A; }
+  button.secondary:hover { background:rgba(255,255,255,0.9); }
+  button.danger { background:#A3361A; border-color:#A3361A; }
+  button.small { padding:5px 10px; font-size:0.7rem; }
+  .error { color:#A3361A; font-weight:600; min-height:1.3em; }
+
+  /* Login */
+  #login { max-width:340px; margin:18vh auto 0; display:flex; flex-direction:column; gap:12px; text-align:center; }
+
+  /* Toolbar + totals */
+  .toolbar { display:flex; flex-wrap:wrap; gap:10px; align-items:center; justify-content:space-between; margin:18px 0; }
+  .toolbar .group { display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
+  .tiles { display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:10px; margin:24px 0 6px; }
+  .tile { background:rgba(255,255,255,0.55); border-radius:6px; padding:12px 14px; }
+  .tile .num { font-size:2rem; font-weight:600; line-height:1.1; }
+  .tile .sub { font-size:0.95rem; opacity:0.8; }
+
+  /* Table */
+  .table-scroll { overflow-x:auto; background:rgba(255,255,255,0.55); border-radius:6px; }
+  table { width:100%; border-collapse:collapse; }
+  th, td { text-align:left; vertical-align:top; padding:10px 12px; border-bottom:1px solid rgba(59,46,74,0.15); }
+  th { font-size:0.72rem; letter-spacing:0.2em; text-transform:uppercase; font-weight:600; white-space:nowrap; }
+  tbody tr:last-child td { border-bottom:none; }
+  td.notes { max-width:280px; white-space:pre-wrap; overflow-wrap:anywhere; }
+  td.when { white-space:nowrap; font-size:0.95rem; }
+  .guest-line { white-space:nowrap; }
+  .mark { display:inline-block; width:1.3em; font-weight:700; }
+  .yes { color:#2E7D4F; }
+  .no { color:#A3361A; }
+  .pending { color:rgba(59,46,74,0.5); }
+  .empty { padding:24px; text-align:center; font-style:italic; }
+
+  /* Editor dialog */
+  dialog { border:none; border-radius:8px; padding:22px; width:min(640px, calc(100vw - 32px)); background:#E6F3F4; color:#3B2E4A; }
+  dialog::backdrop { background:rgba(59,46,74,0.45); }
+  dialog h2 { margin:0 0 14px; font-weight:500; font-size:1.6rem; }
+  .guest-row { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr) 130px auto; gap:8px; margin-bottom:8px; align-items:center; }
+  .guest-row input, .guest-row select { width:100%; min-width:0; }
+  .field { display:flex; flex-direction:column; gap:4px; }
+  .field-row { display:flex; gap:12px; flex-wrap:wrap; margin:14px 0; }
+  .field-row .field { flex:1; min-width:140px; }
+  dialog textarea { width:100%; min-height:70px; resize:vertical; }
+  .dialog-actions { display:flex; justify-content:space-between; gap:8px; margin-top:16px; flex-wrap:wrap; }
+  .dialog-actions .group { display:flex; gap:8px; }
+  @media (max-width:560px) {
+    .guest-row { grid-template-columns:minmax(0,1fr) minmax(0,1fr); }
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <div class="center std-label">Justin &amp; Mikaela</div>
+  <h1>RSVP Admin</h1>
+  <div class="std-divider"><div class="line"></div><div class="diamond"></div><div class="line"></div></div>
+
+  <!-- Login -->
+  <form id="login" hidden>
+    <label class="std-label" for="admin-password">Admin password</label>
+    <input type="password" id="admin-password" autocomplete="current-password" required>
+    <button type="submit">Log in</button>
+  </form>
+
+  <!-- Dashboard -->
+  <main id="dashboard" hidden>
+    <div class="tiles" id="tiles"></div>
+
+    <div class="toolbar">
+      <div class="group">
+        <input type="search" id="filter" placeholder="Filter by name…" aria-label="Filter by name">
+        <select id="status-filter" aria-label="Filter by status">
+          <option value="all">All households</option>
+          <option value="responded">Responded</option>
+          <option value="pending">Not yet responded</option>
+        </select>
+      </div>
+      <div class="group">
+        <button type="button" id="add">Add household</button>
+        <button type="button" class="secondary" id="csv">Download CSV</button>
+        <button type="button" class="secondary" id="reload">Reload</button>
+        <button type="button" class="secondary" id="logout">Log out</button>
+      </div>
+    </div>
+
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr><th>Guests</th><th>Children</th><th>Note</th><th>Last updated</th><th></th></tr>
+        </thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+  </main>
+
+  <div class="error center" id="error" role="alert"></div>
+</div>
+
+<!-- Add / edit household -->
+<dialog id="editor">
+  <form id="editor-form" method="dialog">
+    <h2 id="editor-title">Edit household</h2>
+    <div class="std-label" style="margin-bottom:8px;">Guests</div>
+    <div id="guest-rows"></div>
+    <button type="button" class="secondary small" id="add-guest">+ Add guest</button>
+
+    <div class="field-row">
+      <div class="field">
+        <label class="std-label" for="max-children">Children invited</label>
+        <input type="number" id="max-children" min="0" max="20" step="1" required>
+      </div>
+      <div class="field">
+        <label class="std-label" for="children-attending">Children attending</label>
+        <input type="number" id="children-attending" min="0" max="20" step="1" required>
+      </div>
+    </div>
+
+    <div class="field">
+      <label class="std-label" for="notes">Note</label>
+      <textarea id="notes" maxlength="1000"></textarea>
+    </div>
+
+    <div class="error" id="editor-error" role="alert"></div>
+
+    <div class="dialog-actions">
+      <div class="group">
+        <button type="button" class="danger" id="delete">Delete household</button>
+      </div>
+      <div class="group">
+        <button type="button" class="secondary" id="cancel">Cancel</button>
+        <button type="submit" id="save">Save</button>
+      </div>
+    </div>
+  </form>
+</dialog>
+
+<script>
+  const $ = (id) => document.getElementById(id);
+  let households = [];
+  let editing = null; // household being edited, or null when adding
+
+  // ---- Helpers ----
+  function el(tag, props = {}, children = []) {
+    const node = Object.assign(document.createElement(tag), props);
+    node.append(...children);
+    return node;
+  }
+
+  async function api(action, body = {}) {
+    const res = await fetch('../api.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'same-origin',
+      body: JSON.stringify({ action, ...body }),
+    });
+    const data = await res.json().catch(() => ({ error: 'Something went wrong. Please try again.' }));
+    if (data.needs_admin_login) { $('editor').close(); showLogin(); }
+    if (!res.ok) throw new Error(data.error || 'Something went wrong. Please try again.');
+    return data;
+  }
+
+  function fullName(g) { return `${g.first} ${g.last}`.trim(); }
+
+  function formatWhen(iso) {
+    if (!iso) return '—';
+    return new Date(iso).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+  }
+
+  // ---- Login ----
+  function showLogin() {
+    $('dashboard').hidden = true;
+    $('login').hidden = false;
+    $('admin-password').value = '';
+    $('admin-password').focus();
+  }
+
+  $('login').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    $('error').textContent = '';
+    try {
+      await api('admin_login', { password: $('admin-password').value });
+      await loadDashboard();
+    } catch (err) {
+      $('error').textContent = err.message;
+    }
+  });
+
+  $('logout').addEventListener('click', async () => {
+    await api('admin_logout').catch(() => {});
+    households = [];
+    $('rows').replaceChildren();
+    showLogin();
+  });
+
+  // ---- Dashboard ----
+  async function loadDashboard() {
+    $('error').textContent = '';
+    const data = await api('admin_list');
+    households = data.households;
+    $('login').hidden = true;
+    $('dashboard').hidden = false;
+    render();
+  }
+
+  $('reload').addEventListener('click', () => loadDashboard().catch((err) => { $('error').textContent = err.message; }));
+
+  function render() {
+    renderTiles();
+    renderRows();
+  }
+
+  function renderTiles() {
+    const guests = households.flatMap((h) => h.guests);
+    const count = (v) => guests.filter((g) => g.attending === v).length;
+    const responded = households.filter((h) => h.responded).length;
+    const children = households.reduce((sum, h) => sum + h.children_attending, 0);
+    const tiles = [
+      [count(true), 'Attending', children ? `plus ${children} ${children === 1 ? 'child' : 'children'}` : ''],
+      [count(false), 'Declined', ''],
+      [count(null), 'No answer yet', 'guests'],
+      [`${responded} / ${households.length}`, 'Households responded', ''],
+    ];
+    $('tiles').replaceChildren(...tiles.map(([num, label, sub]) =>
+      el('div', { className: 'tile' }, [
+        el('div', { className: 'num', textContent: num }),
+        el('div', { className: 'std-label', textContent: label }),
+        el('div', { className: 'sub', textContent: sub }),
+      ])));
+  }
+
+  function renderRows() {
+    const q = $('filter').value.trim().toLowerCase();
+    const status = $('status-filter').value;
+    const shown = households.filter((h) => {
+      if (status === 'responded' && !h.responded) return false;
+      if (status === 'pending' && h.responded) return false;
+      return !q || h.guests.some((g) => fullName(g).toLowerCase().includes(q));
+    });
+
+    if (shown.length === 0) {
+      $('rows').replaceChildren(el('tr', {}, [el('td', { colSpan: 5, className: 'empty', textContent: 'No households match.' })]));
+      return;
+    }
+
+    $('rows').replaceChildren(...shown.map((h) => {
+      const guestCell = el('td', {}, h.guests.map((g) => {
+        const [mark, cls, label] = g.attending === true ? ['✓', 'yes', 'attending']
+          : g.attending === false ? ['✗', 'no', 'declined'] : ['–', 'pending', 'no answer'];
+        return el('div', { className: 'guest-line', title: label }, [
+          el('span', { className: `mark ${cls}`, textContent: mark, ariaLabel: label }),
+          fullName(g),
+        ]);
+      }));
+      const children = h.max_children ? `${h.children_attending} of ${h.max_children}` : '—';
+      const editBtn = el('button', { type: 'button', className: 'secondary small', textContent: 'Edit' });
+      editBtn.addEventListener('click', () => openEditor(h));
+      return el('tr', {}, [
+        guestCell,
+        el('td', { textContent: children }),
+        el('td', { className: 'notes', textContent: h.notes }),
+        el('td', { className: 'when', textContent: formatWhen(h.updated_at) }),
+        el('td', {}, [editBtn]),
+      ]);
+    }));
+  }
+
+  $('filter').addEventListener('input', renderRows);
+  $('status-filter').addEventListener('change', renderRows);
+
+  // ---- Editor ----
+  function guestRow(g = { first: '', last: '', attending: null }) {
+    const first = el('input', { type: 'text', placeholder: 'First name', value: g.first, required: true, ariaLabel: 'First name' });
+    const last = el('input', { type: 'text', placeholder: 'Last name', value: g.last, required: true, ariaLabel: 'Last name' });
+    const attending = el('select', { ariaLabel: 'Attending' }, [
+      el('option', { value: '', textContent: 'No answer' }),
+      el('option', { value: 'yes', textContent: 'Attending' }),
+      el('option', { value: 'no', textContent: 'Declined' }),
+    ]);
+    attending.value = g.attending === true ? 'yes' : g.attending === false ? 'no' : '';
+    const remove = el('button', { type: 'button', className: 'secondary small', textContent: 'Remove' });
+    const row = el('div', { className: 'guest-row' }, [first, last, attending, remove]);
+    remove.addEventListener('click', () => {
+      if ($('guest-rows').children.length > 1) row.remove();
+    });
+    return row;
+  }
+
+  function openEditor(h) {
+    editing = h;
+    $('editor-title').textContent = h ? 'Edit household' : 'Add household';
+    $('guest-rows').replaceChildren(...(h ? h.guests : [undefined]).map((g) => guestRow(g)));
+    $('max-children').value = h ? h.max_children : 0;
+    $('children-attending').value = h ? h.children_attending : 0;
+    $('notes').value = h ? h.notes : '';
+    $('delete').hidden = !h;
+    $('editor-error').textContent = '';
+    $('editor').showModal();
+  }
+
+  function readEditor() {
+    const guests = [...$('guest-rows').children].map((row) => {
+      const [first, last, attending] = row.querySelectorAll('input, select');
+      return {
+        first: first.value.trim(),
+        last: last.value.trim(),
+        attending: attending.value === 'yes' ? true : attending.value === 'no' ? false : null,
+      };
+    });
+    return {
+      guests,
+      max_children: Number($('max-children').value),
+      children_attending: Number($('children-attending').value),
+      notes: $('notes').value,
+    };
+  }
+
+  async function editorAction(work) {
+    $('editor-error').textContent = '';
+    const buttons = $('editor').querySelectorAll('button');
+    buttons.forEach((b) => { b.disabled = true; });
+    try {
+      await work();
+      $('editor').close();
+      await loadDashboard();
+    } catch (err) {
+      $('editor-error').textContent = err.message;
+    } finally {
+      buttons.forEach((b) => { b.disabled = false; });
+    }
+  }
+
+  $('add').addEventListener('click', () => openEditor(null));
+  $('add-guest').addEventListener('click', () => $('guest-rows').append(guestRow()));
+  $('cancel').addEventListener('click', () => $('editor').close());
+
+  $('editor-form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    editorAction(() => api('admin_save', {
+      id: editing ? editing.id : '',
+      expected_updated_at: editing ? editing.updated_at : null,
+      household: readEditor(),
+    }));
+  });
+
+  $('delete').addEventListener('click', () => {
+    const name = editing.label;
+    if (!confirm(`Delete ${name} from the guest list? This can't be undone.`)) return;
+    editorAction(() => api('admin_delete', { id: editing.id, expected_updated_at: editing.updated_at }));
+  });
+
+  // ---- CSV export ----
+  // One row per guest; household-level columns appear on each household's first row only, so they sum correctly.
+  $('csv').addEventListener('click', () => {
+    const header = ['Household', 'First name', 'Last name', 'Attending', 'Children invited', 'Children attending', 'Note', 'Last updated (UTC)'];
+    const rows = households.flatMap((h) => h.guests.map((g, i) => [
+      h.label, g.first, g.last,
+      g.attending === true ? 'Yes' : g.attending === false ? 'No' : '',
+      i === 0 ? h.max_children : '', i === 0 ? h.children_attending : '',
+      i === 0 ? h.notes : '', i === 0 ? (h.updated_at || '') : '',
+    ]));
+    // Quote every cell, and defuse values a spreadsheet would treat as a formula (guests write the notes).
+    const cell = (v) => {
+      let s = String(v);
+      if (/^[=+\-@\t\r]/.test(s)) s = `'${s}`;
+      return `"${s.replace(/"/g, '""')}"`;
+    };
+    const csv = '﻿' + [header, ...rows].map((r) => r.map(cell).join(',')).join('\r\n');
+    const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+    const date = new Date().toISOString().slice(0, 10);
+    el('a', { href: url, download: `rsvps-${date}.csv` }).click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  });
+
+  // ---- Start ----
+  api('admin_status')
+    .then(({ authenticated }) => (authenticated ? loadDashboard() : showLogin()))
+    .catch((err) => { showLogin(); $('error').textContent = err.message; });
+</script>
+</body>
+</html>

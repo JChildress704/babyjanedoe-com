@@ -8,7 +8,8 @@ Wedding website for Justin & Mikaela — April 24, 2027, Knoxville, TN.
 - `images/` — photos used on the site
 - `reference/` — design references and source assets, not served on the live site (see `reference/README.md`)
 - `rsvp/` — RSVP page (`index.html`) and its PHP backend (`api.php`), served at `/rsvp/`
-- `rsvp-data-example/` — sample config for the RSVP backend, not deployed (see [RSVP setup](#rsvp-setup)). A local test guest list can live here as `rsvps.json`; it's gitignored so guest names never reach the repo.
+- `rsvp/admin/` — password-protected admin page for viewing and editing the guest list, served at `/rsvp/admin/`
+- `rsvp-data-example/` — config template (`config.example.php`) for the RSVP backend, not deployed (see [RSVP setup](#rsvp-setup)). Your real `config.php` and a local test guest list (`rsvps.json`) can live here too; both are gitignored so passwords and guest names never reach the repo.
 - `.github/workflows/deploy.yml` — deploys `main` to Hostinger over FTP on every push
 
 ## Deployment
@@ -38,8 +39,14 @@ domains/babyjanedoe.com/
 One-time setup, in hPanel → Files → File Manager:
 
 1. Next to `public_html/`, create a folder named `rsvp-data`.
-2. Upload `rsvp-data-example/config.php` into it and change the password.
-3. Build the guest list in the [format below](#guest-list-format) and upload it as `rsvp-data/rsvps.json`.
+2. Copy `rsvp-data-example/config.example.php` to `config.php`, fill in the guest password, the admin password, and the notification email address, and upload it into `rsvp-data/`.
+3. Upload a guest list as `rsvp-data/rsvps.json`. It can be as small as `{"households": {}}`; then add households from the admin page. To start from a spreadsheet instead, build it in the [format below](#guest-list-format).
+
+### Admin page and email notifications
+
+`/rsvp/admin/` uses its own password (`admin_password` in `config.php`, exact match). It shows totals, a table of every household you can filter by name or response status, and a CSV download. From there you can add, edit, or delete households, including changing names, guest count, children, and anyone's answer. If a guest RSVPs while you have their household open, your save is refused with a "reload first" message instead of overwriting their response.
+
+Each guest RSVP emails a summary with running totals to `notify_email`. Edits made from the admin page don't send emails. Emails go out through Hostinger's PHP mail, sent from `from_email`. Use an address on this domain (it helps to create that mailbox or a forwarder in hPanel → Emails), and if the first ones land in spam, mark them "Not spam".
 
 ### Guest list format
 
@@ -66,10 +73,11 @@ One-time setup, in hPanel → Files → File Manager:
 - The RSVP form sets `attending` (`true`/`false`), `children_attending`, `notes`, `responded`, and `updated_at`.
 - Search matches any guest's last name in the household, ignoring capitalization, accents, and punctuation, and each part of a hyphenated name is searchable on its own.
 
-To check responses, download `rsvp-data/rsvps.json` from File Manager. If you edit it by hand while RSVPs are open, download it, edit, and re-upload quickly so you don't overwrite a response that came in meanwhile.
+Prefer the admin page for changes once RSVPs are open. If you do edit the JSON by hand, download it, edit, and re-upload quickly so you don't overwrite a response that came in meanwhile.
 
 ## Roadmap
 
 - [x] Save-the-date landing page
 - [x] RSVP (name lookup against invite list, attending + children)
+- [x] RSVP admin page and email notifications
 - [ ] Book registry ("virtual bookshelf")
