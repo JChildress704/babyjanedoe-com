@@ -257,6 +257,9 @@ function check_password(string $given, string $expected): void {
 
 // --- Request handling ---
 
+// weekly-report.php includes this file for the helpers above and stops here.
+if (defined('RSVP_HELPERS_ONLY')) return;
+
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') respond(405, ['error' => 'Method not allowed']);
 // Requiring a JSON body means other sites can't submit to this endpoint with a plain HTML form.
 if (!str_starts_with($_SERVER['CONTENT_TYPE'] ?? '', 'application/json')) respond(415, ['error' => 'Expected JSON']);

@@ -7,7 +7,7 @@ Wedding website for Justin & Mikaela — April 24, 2027, Knoxville, TN.
 - `index.html` — the save-the-date landing page (static HTML/CSS, no build step)
 - `images/` — photos used on the site
 - `reference/` — design references and source assets, not served on the live site (see `reference/README.md`)
-- `rsvp/` — RSVP page (`index.html`) and its PHP backend (`api.php`), served at `/rsvp/`
+- `rsvp/` — RSVP page (`index.html`) and its PHP backend (`api.php`), served at `/rsvp/`, plus `weekly-report.php`, a cron script that emails the RSVP CSV (see [Weekly CSV email](#weekly-csv-email))
 - `rsvp/admin/` — password-protected admin page for viewing and editing the guest list, served at `/rsvp/admin/`
 - `rsvp-data-example/` — config template (`config.example.php`) for the RSVP backend, not deployed (see [RSVP setup](#rsvp-setup)). Your real `config.php` and a local test guest list (`rsvps.json`) can live here too; both are gitignored so passwords and guest names never reach the repo.
 - `.github/workflows/deploy.yml` — deploys `main` to Hostinger over FTP on every push
@@ -47,6 +47,14 @@ One-time setup, in hPanel → Files → File Manager:
 `/rsvp/admin/` uses its own password (`admin_password` in `config.php`, exact match). It shows totals, a table of every household you can filter by name or response status, and a CSV download. From there you can add, edit, or delete households, including changing names, guest count, children, and anyone's answer. If a guest RSVPs while you have their household open, your save is refused with a "reload first" message instead of overwriting their response.
 
 Each guest RSVP emails a summary with running totals to `notify_email`. Edits made from the admin page don't send emails. Emails go out through Hostinger's PHP mail, sent from `from_email`. Use an address on this domain (it helps to create that mailbox or a forwarder in hPanel → Emails), and if the first ones land in spam, mark them "Not spam".
+
+### Weekly CSV email
+
+Every Sunday at noon Eastern, `rsvp/weekly-report.php` emails `notify_email` the running totals with the guest list attached as `rsvps-YYYY-MM-DD.csv` (the same file as the admin page's Download CSV). It only runs from the command line; a web request gets a 404.
+
+One-time setup, in hPanel → Advanced → Cron Jobs: add a PHP job for `domains/babyjanedoe.com/public_html/rsvp/weekly-report.php` with the schedule `0 * * * 0` (every hour on Sundays). The script sends only during the noon hour in New York, so it stays on time through daylight saving changes whatever the server's time zone is.
+
+To test it on the live site, add a temporary job with `--now` after the path, which sends immediately. Delete that job once the email arrives.
 
 ### Guest list format
 
