@@ -27,13 +27,18 @@
   .side-image.left { left:0; object-position:90% center; }
   .side-image.right { right:0; }
   .content-wrap { position:relative; z-index:1; margin-left:var(--rail); margin-right:var(--rail); }
+  .site-nav { position:absolute; top:0; left:0; right:0; z-index:2; display:flex; justify-content:center; gap:clamp(20px,6vw,44px); padding:22px 16px; }
+  .site-nav a, .site-nav .soon { font-size:0.8rem; letter-spacing:0.28em; text-transform:uppercase; font-weight:600; color:#3B2E4A; text-decoration:none; padding:6px 0 5px; border-bottom:1px solid transparent; }
+  .site-nav a:hover { color:#F46F30; }
+  .site-nav a[aria-current="page"] { border-bottom-color:#F46F30; }
+  .site-nav .soon { opacity:0.45; cursor:default; }
   @media (min-width:701px) {
     body { --rail: min(33.333vw, 560px); }
     .side-image { display:block; }
   }
 
   /* ---- RSVP ---- */
-  .page { min-height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:64px 16px; }
+  .page { min-height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:88px 16px 64px; }
   .stack { width:100%; max-width:420px; display:flex; flex-direction:column; align-items:center; gap:22px; text-align:center; }
   .title { font-size:clamp(2rem,7vw,3rem); line-height:1.05; font-weight:500; }
   .hint { font-size:1.05rem; font-style:italic; line-height:1.4; }
@@ -82,6 +87,12 @@
 <img class="side-image right" src="../images/image_right.jpg" alt="">
 
 <div class="content-wrap">
+  <nav class="site-nav" aria-label="Main">
+    <a href="/">Info</a>
+    <a href="/rsvp/" aria-current="page">RSVP</a>
+    <span class="soon" aria-disabled="true" title="Coming soon">Travel</span>
+  </nav>
+
   <main class="page">
     <div class="stack">
 
