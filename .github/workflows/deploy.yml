@@ -26,3 +26,4 @@ jobs:
             **/reference/**
             **/rsvp-data-example/**
             **/rsvp-data/**
+            CLAUDE.md
