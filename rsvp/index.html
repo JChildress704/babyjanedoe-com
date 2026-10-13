@@ -43,7 +43,8 @@
   .title { font-size:clamp(2rem,7vw,3rem); line-height:1.05; font-weight:500; }
   .hint { font-size:1.05rem; font-style:italic; line-height:1.4; }
   .step { width:100%; display:flex; flex-direction:column; align-items:center; gap:16px; }
-  .step[hidden] { display:none; }
+  /* Anything with the hidden attribute stays hidden, even if its class sets a display. */
+  [hidden] { display:none !important; }
   form { width:100%; display:flex; flex-direction:column; gap:14px; }
   input[type=text], input[type=password], input[type=search], textarea {
     width:100%; font:inherit; font-size:1.15rem; color:#3B2E4A;
