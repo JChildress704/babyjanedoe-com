@@ -39,18 +39,20 @@ $cell = function (mixed $v): string {
     if (preg_match('/^[=+\-@\t\r]/', $s)) $s = "'" . $s;
     return '"' . str_replace('"', '""', $s) . '"';
 };
-$rows = [['Household', 'First name', 'Last name', 'Attending', 'Children invited', 'Children attending', 'Note', 'Last updated (UTC)']];
+$rows = [['Household', 'First name', 'Last name', 'Attending', 'Plus-one', 'Plus-ones allowed', 'Children invited', 'Children attending', 'Note', 'Last updated (UTC)']];
 foreach ($households as $h) {
     $label = household_label($h['guests']);
     foreach (array_values($h['guests']) as $i => $g) {
         $a = $g['attending'] ?? null;
         $rows[] = [
             $label, $g['first'], $g['last'],
-            $a === true ? 'Yes' : ($a === false ? 'No' : ''),
-            $i === 0 ? (int)($h['max_children'] ?? 0) : '', $i === 0 ? (int)($h['children_attending'] ?? 0) : '',
+            $a === true ? 'Yes' : ($a === false ? 'No' : ''), '',
+            $i === 0 ? (int)($h['max_guests'] ?? 0) : '', $i === 0 ? (int)($h['max_children'] ?? 0) : '', $i === 0 ? (int)($h['children_attending'] ?? 0) : '',
             $i === 0 ? ($h['notes'] ?? '') : '', $i === 0 ? ($h['updated_at'] ?? '') : '',
         ];
     }
+    // Plus-ones follow the household's guests, full name in "First name".
+    foreach ($h['plus_ones'] ?? [] as $name) $rows[] = [$label, $name, '', 'Yes', 'Yes', '', '', '', '', ''];
 }
 $csv = "\u{FEFF}" . implode("\r\n", array_map(fn($r) => implode(',', array_map($cell, $r)), $rows));
 

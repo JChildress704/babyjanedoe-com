@@ -4,7 +4,7 @@
 // Guest actions (shared password from the invitation):
 //   login  { password }                    -> unlocks the session
 //   search { query }                       -> households whose guests match a last name
-//   submit { id, guests, children, notes } -> saves one household's response, emails a notification
+//   submit { id, guests, children, plus_ones, notes } -> saves one household's response, emails a notification
 //
 // Admin actions (separate admin password, used by /rsvp/admin/):
 //   admin_login  { password }
@@ -24,6 +24,7 @@ const MAX_RESULTS = 10;
 const MAX_NOTES_LENGTH = 1000;
 const MAX_GUESTS_PER_HOUSEHOLD = 12;
 const MAX_CHILDREN = 20;
+const MAX_PLUS_ONES = 10;
 const MAX_NAME_LENGTH = 100;
 
 header('Content-Type: application/json; charset=utf-8');
@@ -91,6 +92,8 @@ function public_household(string $id, array $h): array {
         ], $h['guests']),
         'max_children' => (int)($h['max_children'] ?? 0),
         'children_attending' => (int)($h['children_attending'] ?? 0),
+        'max_guests' => (int)($h['max_guests'] ?? 0),
+        'plus_ones' => $h['plus_ones'] ?? [],
         'notes' => $h['notes'] ?? '',
         'responded' => (bool)($h['responded'] ?? false),
     ];
@@ -108,6 +111,8 @@ function admin_household(string $id, array $h): array {
         ], $h['guests']),
         'max_children' => (int)($h['max_children'] ?? 0),
         'children_attending' => (int)($h['children_attending'] ?? 0),
+        'max_guests' => (int)($h['max_guests'] ?? 0),
+        'plus_ones' => $h['plus_ones'] ?? [],
         'notes' => $h['notes'] ?? '',
         'responded' => (bool)($h['responded'] ?? false),
         'updated_at' => $h['updated_at'] ?? null,
@@ -125,6 +130,8 @@ function rsvp_totals(array $data): array {
             elseif ($a === false) $t['declined']++;
             else $t['pending']++;
         }
+        // Plus-ones are only recorded when they're coming, so each one counts as attending.
+        $t['attending'] += count($h['plus_ones'] ?? []);
         $t['children'] += (int)($h['children_attending'] ?? 0);
     }
     return $t;
@@ -167,6 +174,23 @@ function with_locked_data(callable $fn): mixed {
     }
 }
 
+// Validates plus-one names: a list of non-empty names, no more than the household is allowed.
+// Nobody attending means no plus-ones.
+function clean_plus_ones(mixed $in, int $max, bool $anyone): array {
+    if ($in === null) $in = [];
+    if (!is_array($in) || !array_is_list($in)) respond(400, ['error' => 'Invalid request']);
+    $names = [];
+    foreach ($in as $name) {
+        if (!is_string($name)) respond(400, ['error' => 'Invalid request']);
+        $name = trim(preg_replace('/\s+/u', ' ', $name));
+        if ($name === '') respond(400, ['error' => "Please enter your guest's name."]);
+        if (mb_strlen($name) > MAX_NAME_LENGTH) respond(400, ['error' => 'That name is too long.']);
+        $names[] = $name;
+    }
+    if (count($names) > $max) respond(400, ['error' => 'That is more guests than this invitation includes.']);
+    return $anyone ? $names : [];
+}
+
 // Emails a summary of one household's response. Failures are ignored: the RSVP is already saved.
 function send_notification(array $h, bool $was_responded, array $totals): void {
     $config = load_config();
@@ -179,6 +203,7 @@ function send_notification(array $h, bool $was_responded, array $totals): void {
     foreach ($h['guests'] as $g) {
         $lines[] = '  ' . trim($g['first'] . ' ' . $g['last']) . ': ' . ($g['attending'] ? 'attending' : 'not attending');
     }
+    foreach ($h['plus_ones'] ?? [] as $name) $lines[] = "  $name (guest): attending";
     $max = (int)($h['max_children'] ?? 0);
     if ($max > 0) $lines[] = "  Children attending: {$h['children_attending']} (of $max invited)";
     if (($h['notes'] ?? '') !== '') array_push($lines, '', 'Note: ' . $h['notes']);
@@ -221,11 +246,16 @@ function clean_admin_household(mixed $in): array {
     $notes = trim((string)($in['notes'] ?? ''));
     if (mb_strlen($notes) > MAX_NOTES_LENGTH) respond(400, ['error' => 'That note is too long.']);
 
+    $max_guests = $in['max_guests'] ?? 0;
+    if (!is_int($max_guests) || $max_guests < 0 || $max_guests > MAX_PLUS_ONES) respond(400, ['error' => 'Plus-ones allowed must be between 0 and ' . MAX_PLUS_ONES . '.']);
+
     $anyone = in_array(true, array_column($guests, 'attending'), true);
     return [
         'guests' => $guests,
         'max_children' => $max,
         'children_attending' => $anyone ? $children : 0,
+        'max_guests' => $max_guests,
+        'plus_ones' => clean_plus_ones($in['plus_ones'] ?? [], $max_guests, $anyone),
         // A household counts as responded once every guest has an answer.
         'responded' => !in_array(null, array_column($guests, 'attending'), true),
         'notes' => $notes,
@@ -381,17 +411,18 @@ if ($action === 'submit') {
     $id = (string)($input['id'] ?? '');
     $answers = $input['guests'] ?? null;
     $children = $input['children'] ?? 0;
+    $plus_ones = $input['plus_ones'] ?? [];
     $notes = trim((string)($input['notes'] ?? ''));
 
     if (!is_array($answers)) respond(400, ['error' => 'Invalid request']);
     if (mb_strlen($notes) > MAX_NOTES_LENGTH) respond(400, ['error' => 'Your note is a little too long. Please shorten it.']);
 
-    $result = with_locked_data(function (array $data, callable $save) use ($id, $answers, $children, $notes) {
+    $result = with_locked_data(function (array $data, callable $save) use ($id, $answers, $children, $plus_ones, $notes) {
         if (!isset($data['households'][$id])) respond(404, ['error' => "We couldn't find that invitation. Please search again."]);
         $h = &$data['households'][$id];
         $was_responded = !empty($h['responded']);
 
-        // Only attendance can change; names and the guest count come from the guest list.
+        // Only attendance (and plus-one names, up to max_guests) can change; invited names come from the guest list.
         if (count($answers) !== count($h['guests'])) respond(400, ['error' => 'Invalid request']);
         foreach ($h['guests'] as $i => &$g) {
             if (!is_bool($answers[$i] ?? null)) respond(400, ['error' => 'Please let us know whether each guest is attending.']);
@@ -403,6 +434,7 @@ if ($action === 'submit') {
         if (!is_int($children) || $children < 0 || $children > $max) respond(400, ['error' => 'Invalid number of children.']);
         $anyone = in_array(true, $answers, true);
         $h['children_attending'] = $anyone ? $children : 0;
+        $h['plus_ones'] = clean_plus_ones($plus_ones, (int)($h['max_guests'] ?? 0), $anyone);
         $h['notes'] = $notes;
         $h['responded'] = true;
         $h['updated_at'] = gmdate('Y-m-d\TH:i:s\Z');

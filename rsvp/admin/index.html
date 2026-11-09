@@ -154,6 +154,17 @@
       </div>
     </div>
 
+    <div class="field-row">
+      <div class="field" style="flex:0 0 180px;">
+        <label class="std-label" for="max-guests">Plus-ones allowed</label>
+        <input type="number" id="max-guests" min="0" max="10" step="1" required>
+      </div>
+      <div class="field">
+        <label class="std-label" for="plus-ones">Plus-ones coming (one per line)</label>
+        <textarea id="plus-ones" rows="2" style="min-height:0;"></textarea>
+      </div>
+    </div>
+
     <div class="field">
       <label class="std-label" for="notes">Note</label>
       <textarea id="notes" maxlength="1000"></textarea>
@@ -251,10 +262,14 @@
   function renderTiles() {
     const guests = households.flatMap((h) => h.guests);
     const count = (v) => guests.filter((g) => g.attending === v).length;
+    const plusOnes = households.reduce((sum, h) => sum + h.plus_ones.length, 0);
     const responded = households.filter((h) => h.responded).length;
     const children = households.reduce((sum, h) => sum + h.children_attending, 0);
     const tiles = [
-      [count(true), 'Attending', children ? `plus ${children} ${children === 1 ? 'child' : 'children'}` : ''],
+      [count(true) + plusOnes, 'Attending', [
+        plusOnes ? `incl. ${plusOnes} ${plusOnes === 1 ? 'plus-one' : 'plus-ones'}` : '',
+        children ? `plus ${children} ${children === 1 ? 'child' : 'children'}` : '',
+      ].filter(Boolean).join(', ')],
       [count(false), 'Declined', ''],
       [count(null), 'No answer yet', 'guests'],
       [`${responded} / ${households.length}`, 'Households responded', ''],
@@ -273,7 +288,8 @@
     const shown = households.filter((h) => {
       if (status === 'responded' && !h.responded) return false;
       if (status === 'pending' && h.responded) return false;
-      return !q || h.guests.some((g) => fullName(g).toLowerCase().includes(q));
+      return !q || h.guests.some((g) => fullName(g).toLowerCase().includes(q))
+        || h.plus_ones.some((n) => n.toLowerCase().includes(q));
     });
 
     if (shown.length === 0) {
@@ -282,14 +298,24 @@
     }
 
     $('rows').replaceChildren(...shown.map((h) => {
-      const guestCell = el('td', {}, h.guests.map((g) => {
-        const [mark, cls, label] = g.attending === true ? ['✓', 'yes', 'attending']
-          : g.attending === false ? ['✗', 'no', 'declined'] : ['–', 'pending', 'no answer'];
-        return el('div', { className: 'guest-line', title: label }, [
-          el('span', { className: `mark ${cls}`, textContent: mark, ariaLabel: label }),
-          fullName(g),
-        ]);
-      }));
+      const guestCell = el('td', {}, [
+        ...h.guests.map((g) => {
+          const [mark, cls, label] = g.attending === true ? ['✓', 'yes', 'attending']
+            : g.attending === false ? ['✗', 'no', 'declined'] : ['–', 'pending', 'no answer'];
+          return el('div', { className: 'guest-line', title: label }, [
+            el('span', { className: `mark ${cls}`, textContent: mark, ariaLabel: label }),
+            fullName(g),
+          ]);
+        }),
+        ...h.plus_ones.map((name) => el('div', { className: 'guest-line', title: 'plus-one, attending' }, [
+          el('span', { className: 'mark yes', textContent: '✓', ariaLabel: 'attending' }),
+          `${name} (plus-one)`,
+        ])),
+      ]);
+      if (h.max_guests > h.plus_ones.length && !h.responded) {
+        const open = h.max_guests - h.plus_ones.length;
+        guestCell.append(el('div', { className: 'guest-line pending', textContent: `+${open} plus-one${open === 1 ? '' : 's'} allowed` }));
+      }
       const children = h.max_children ? `${h.children_attending} of ${h.max_children}` : '—';
       const editBtn = el('button', { type: 'button', className: 'secondary small', textContent: 'Edit' });
       editBtn.addEventListener('click', () => openEditor(h));
@@ -330,6 +356,8 @@
     $('guest-rows').replaceChildren(...(h ? h.guests : [undefined]).map((g) => guestRow(g)));
     $('max-children').value = h ? h.max_children : 0;
     $('children-attending').value = h ? h.children_attending : 0;
+    $('max-guests').value = h ? h.max_guests : 0;
+    $('plus-ones').value = h ? h.plus_ones.join('\n') : '';
     $('notes').value = h ? h.notes : '';
     $('delete').hidden = !h;
     $('editor-error').textContent = '';
@@ -351,6 +379,8 @@
       guests,
       max_children: Number($('max-children').value),
       children_attending: Number($('children-attending').value),
+      max_guests: Number($('max-guests').value),
+      plus_ones: $('plus-ones').value.split('\n').map((n) => n.trim()).filter(Boolean),
       notes: $('notes').value,
     };
   }
@@ -392,13 +422,17 @@
   // ---- CSV export ----
   // One row per guest; household-level columns appear on each household's first row only, so they sum correctly.
   $('csv').addEventListener('click', () => {
-    const header = ['Household', 'First name', 'Last name', 'Attending', 'Children invited', 'Children attending', 'Note', 'Last updated (UTC)'];
-    const rows = households.flatMap((h) => h.guests.map((g, i) => [
-      h.label, g.first, g.last,
-      g.attending === true ? 'Yes' : g.attending === false ? 'No' : '',
-      i === 0 ? h.max_children : '', i === 0 ? h.children_attending : '',
-      i === 0 ? h.notes : '', i === 0 ? (h.updated_at || '') : '',
-    ]));
+    // Plus-ones get their own rows after the household's guests, with their full name in "First name".
+    const header = ['Household', 'First name', 'Last name', 'Attending', 'Plus-one', 'Plus-ones allowed', 'Children invited', 'Children attending', 'Note', 'Last updated (UTC)'];
+    const rows = households.flatMap((h) => [
+      ...h.guests.map((g, i) => [
+        h.label, g.first, g.last,
+        g.attending === true ? 'Yes' : g.attending === false ? 'No' : '', '',
+        i === 0 ? h.max_guests : '', i === 0 ? h.max_children : '', i === 0 ? h.children_attending : '',
+        i === 0 ? h.notes : '', i === 0 ? (h.updated_at || '') : '',
+      ]),
+      ...h.plus_ones.map((name) => [h.label, name, '', 'Yes', 'Yes', '', '', '', '', '']),
+    ]);
     // Quote every cell, and defuse values a spreadsheet would treat as a formula (guests write the notes).
     const cell = (v) => {
       let s = String(v);

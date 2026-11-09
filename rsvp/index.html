@@ -79,6 +79,7 @@
   .choice input:checked + span { background:#3B2E4A; color:#fff; border-color:#3B2E4A; }
   .choice input:focus-visible + span { outline:2px solid #F46F30; outline-offset:2px; }
   .field-label { font-size:0.78rem; letter-spacing:0.28em; text-transform:uppercase; font-weight:600; }
+  .plus-one-names { width:100%; display:flex; flex-direction:column; gap:8px; }
   select { font:inherit; font-size:1.15rem; color:#3B2E4A; padding:8px 12px; border-radius:4px; border:1px solid rgba(59,46,74,0.35); background:rgba(255,255,255,0.55); }
 </style>
 </head>
@@ -124,6 +125,14 @@
       <section class="step" id="step-respond" hidden>
         <form id="respond-form">
           <div id="guests"></div>
+          <div id="plus-one-field" class="guest" hidden>
+            <div class="field-label" id="plus-one-question">Will you be bringing a guest?</div>
+            <div class="choice" role="radiogroup" aria-labelledby="plus-one-question">
+              <label><input type="radio" name="plus-one" value="yes"><span>Yes</span></label>
+              <label><input type="radio" name="plus-one" value="no"><span>No</span></label>
+            </div>
+            <div class="plus-one-names" id="plus-one-names" hidden></div>
+          </div>
           <div id="children-field" class="guest" hidden>
             <label class="field-label" for="children">Children attending</label>
             <select id="children"></select>
@@ -159,7 +168,7 @@
   function show(step) {
     steps.forEach((s) => { $(s).hidden = s !== step; });
     $('error').textContent = '';
-    const focusable = $(step).querySelector('input:not([type=radio]), button');
+    const focusable = $(step).querySelector('input:not([type=radio]):not(.plus-one-name), button');
     if (focusable) focusable.focus();
   }
 
@@ -246,7 +255,7 @@
         input.value = val;
         input.required = true;
         input.checked = g.attending === bool;
-        input.addEventListener('change', updateChildrenField);
+        input.addEventListener('change', updateFields);
         const span = document.createElement('span');
         span.textContent = text;
         label.append(input, span);
@@ -265,9 +274,29 @@
       select.append(opt);
     }
     select.value = h.children_attending;
+
+    // One name box per plus-one allowed; the first is the one we ask for, any others are optional.
+    const plusOnes = h.plus_ones || [];
+    $('plus-one-question').textContent = h.max_guests > 1 ? 'Will you be bringing guests?' : 'Will you be bringing a guest?';
+    $('plus-one-names').replaceChildren(...Array.from({ length: h.max_guests || 0 }, (_, i) => {
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.className = 'plus-one-name';
+      input.maxLength = 100;
+      input.autocomplete = 'off';
+      input.placeholder = i === 0 ? "Guest's full name" : "Another guest's full name (optional)";
+      input.setAttribute('aria-label', i === 0 ? "Guest's name" : `Guest ${i + 1}'s name`);
+      input.value = plusOnes[i] || '';
+      return input;
+    }));
+    // Returning guests see their earlier answer: a saved name means yes, a saved RSVP with someone attending and no name means no.
+    const bringing = plusOnes.length > 0 ? 'yes'
+      : h.responded && h.guests.some((g) => g.attending) ? 'no' : null;
+    document.querySelectorAll('input[name="plus-one"]').forEach((r) => { r.checked = r.value === bringing; });
+
     $('notes').value = h.notes || '';
     $('send').textContent = h.responded ? 'Change RSVP' : 'Send RSVP';
-    updateChildrenField();
+    updateFields();
     show('step-respond');
   }
 
@@ -278,9 +307,33 @@
     });
   }
 
-  // Children are only asked about when the household has some and at least one adult is coming.
-  function updateChildrenField() {
-    $('children-field').hidden = !(current.max_children > 0 && answers().includes(true));
+  function plusOneAnswer() {
+    const checked = document.querySelector('input[name="plus-one"]:checked');
+    return checked ? checked.value === 'yes' : null;
+  }
+
+  // Children and plus-ones are only asked about when the invitation includes them and at least one guest is coming.
+  function updateFields() {
+    const anyone = answers().includes(true);
+    $('children-field').hidden = !(current.max_children > 0 && anyone);
+    $('plus-one-field').hidden = !(current.max_guests > 0 && anyone);
+    $('plus-one-names').hidden = plusOneAnswer() !== true;
+  }
+
+  document.querySelectorAll('input[name="plus-one"]').forEach((r) => r.addEventListener('change', () => {
+    updateFields();
+    if (plusOneAnswer()) document.querySelector('.plus-one-name').focus();
+  }));
+
+  // The plus-one fields aren't marked required (a hidden required field blocks the form), so they're checked here.
+  function plusOneNames() {
+    if ($('plus-one-field').hidden) return [];
+    const bringing = plusOneAnswer();
+    if (bringing === null) throw new Error("Please let us know whether you'll be bringing a guest.");
+    if (!bringing) return [];
+    const names = [...document.querySelectorAll('.plus-one-name')].map((i) => i.value.trim()).filter(Boolean);
+    if (names.length === 0) throw new Error("Please enter your guest's name.");
+    return names;
   }
 
   $('respond-form').addEventListener('submit', (e) => {
@@ -289,8 +342,9 @@
       const guests = answers();
       if (guests.includes(null)) throw new Error('Please let us know whether each guest is attending.');
       const children = guests.includes(true) ? Number($('children').value) : 0;
+      const plus_ones = plusOneNames();
       const { household } = await api('submit', {
-        id: current.id, guests, children, notes: $('notes').value,
+        id: current.id, guests, children, plus_ones, notes: $('notes').value,
       });
       current = household;
       $('done-message').textContent = household.guests.some((g) => g.attending)

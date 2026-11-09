@@ -24,7 +24,7 @@ One-time setup: in this repo's GitHub Settings → Secrets and variables → Act
 
 ## RSVP setup
 
-The RSVP page is password protected with one shared password (printed on the invitations). Guests search by last name, pick their household from the matches, and mark each guest as attending or not, plus children and an optional note. They can come back and change their answer.
+The RSVP page is password protected with one shared password (printed on the invitations). Guests search by last name, pick their household from the matches, and mark each guest as attending or not, plus children, a plus-one's name if their invitation includes one, and an optional note. They can come back and change their answer.
 
 The guest list and password are **not in git** and are **not deployed**. They live in an `rsvp-data/` folder next to `public_html/` on the server, so deploys never overwrite responses and the files can't be downloaded from the web:
 
@@ -68,6 +68,8 @@ To test it on the live site, add a temporary job with `--now` after the path, wh
       ],
       "max_children": 2,
       "children_attending": 0,
+      "max_guests": 1,
+      "plus_ones": [],
       "responded": false,
       "updated_at": null,
       "notes": ""
@@ -77,8 +79,8 @@ To test it on the live site, add a temporary job with `--now` after the path, wh
 ```
 
 - The household key (`h001`) is an internal ID guests never see. It just has to be unique.
-- You fill in `guests` (first/last names) and `max_children` (`0` hides the children question). Guests can't add or rename people.
-- The RSVP form sets `attending` (`true`/`false`), `children_attending`, `notes`, `responded`, and `updated_at`.
+- You fill in `guests` (first/last names), `max_children` (`0` hides the children question), and `max_guests`, the number of plus-ones allowed (`0` or missing hides the "Will you be bringing a guest?" question). Guests can't add or rename invited people.
+- The RSVP form sets `attending` (`true`/`false`), `children_attending`, `plus_ones` (the names guests enter, only kept when someone in the household is attending; each counts as attending in the totals), `notes`, `responded`, and `updated_at`.
 - Search matches any guest's last name in the household, ignoring capitalization, accents, and punctuation, and each part of a hyphenated name is searchable on its own.
 
 Prefer the admin page for changes once RSVPs are open. If you do edit the JSON by hand, download it, edit, and re-upload quickly so you don't overwrite a response that came in meanwhile.
