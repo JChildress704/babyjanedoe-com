@@ -4,6 +4,7 @@
 return [
     // Shared RSVP password printed on the invitations.
     // Matching ignores capitalization and leading/trailing spaces.
+    // To accept more than one, use a list: 'password' => ['first', 'second'],
     'password' => 'change-me',
 
     // Password for the admin page at /rsvp/admin/. Exact match, case-sensitive.

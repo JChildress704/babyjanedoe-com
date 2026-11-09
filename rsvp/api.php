@@ -306,9 +306,14 @@ if ($action === 'login') {
     $config = load_config();
     if ($config === null) respond(500, ['error' => 'RSVPs are not set up yet. Please try again later.']);
     // Forgiving comparison: guests shouldn't fail over capitalization or a stray space.
+    // 'password' may be one string or a list of accepted passwords.
     $given = mb_strtolower(trim((string)($input['password'] ?? '')), 'UTF-8');
-    $expected = mb_strtolower(trim((string)($config['password'] ?? '')), 'UTF-8');
-    if ($expected === '' || !hash_equals($expected, $given)) {
+    $ok = false;
+    foreach ((array)($config['password'] ?? []) as $p) {
+        $expected = mb_strtolower(trim((string)$p), 'UTF-8');
+        if ($expected !== '' && hash_equals($expected, $given)) $ok = true;
+    }
+    if (!$ok) {
         sleep(1);
         respond(401, ['error' => "That password didn't work. Check your invitation and try again."]);
     }
